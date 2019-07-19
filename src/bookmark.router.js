@@ -3,6 +3,7 @@ const bookmarkRouter=express.Router();
 const bookmarks=require('./store');
 const logger=require('./logger');
 const uuid = require('uuid/v4');
+const { isWebUri } = require('valid-url')
 
 bookmarkRouter
   .route('/bookmarks')
@@ -29,6 +30,10 @@ bookmarkRouter
       return res
         .status(400)
         .send('Invalid data');
+    }
+    if (!isWebUri(url)) {
+      logger.error(`Invalid url '${url}' supplied`);
+      return res.status(400).send('\'url\' must be a valid URL');
     }
     if (rating && (typeof rating!==typeof 2 || (rating<0 || rating>5) ) ) {
       logger.error('rating must be a number between 0 and 5');
