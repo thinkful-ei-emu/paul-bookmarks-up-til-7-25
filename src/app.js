@@ -28,10 +28,12 @@ app.use(bookmarkRouter);
 
 app.use(function errorHandler(error, req, res, next) {
   let response;
+  if(error.routine==='string_to_uuid')
+    return res.status(400).json({error:{message:'need uuid'}});
   if (process.env.NODE_ENV === 'production') {
     response = { error: { message: 'server error' } };
   } else {
-    console.error(error);
+    logger.error(error);
     response = { message: error.message, error };
   }
   res.status(500).json(response);
