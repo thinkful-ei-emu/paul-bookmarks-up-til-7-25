@@ -1,3 +1,5 @@
+/* eslint-disable quotes */
+const path = require('path');
 const express = require('express');
 const bookmarkRouter = express.Router();
 const bookmarksService = require('./bookmarksService');
@@ -7,7 +9,7 @@ const { isWebUri } = require('valid-url');
 const xss=require('xss');
 
 bookmarkRouter
-  .route('/bookmarks')
+  .route('/')
   .get((req, res, next) => {
     const db = req.app.get('db');
     bookmarksService.getAllItems(db)
@@ -65,7 +67,7 @@ bookmarkRouter
         logger.info(`bookmark with id ${insertedB.id} created`);
         res
           .status(201)
-          .location(`/bookmarks/${insertedB.id}`)
+          .location(path.posix.join(req.originalUrl,`/${insertedB.id}`))
           .json(cleanUp(insertedB));
       })
       .catch(next);
@@ -75,7 +77,7 @@ bookmarkRouter
   });
 
 bookmarkRouter
-  .route('/bookmarks/:id')
+  .route('/:id')
   .all((req, res, next) => {
     bookmarksService.getById(
       req.app.get('db'),
@@ -101,6 +103,23 @@ bookmarkRouter
     bookmarksService.deleteById(db, id)
       .then(actual => {
         logger.info(`List with id ${id} deleted.`);
+        res.status(204).end();
+      })
+      .catch(next);
+  })
+  .patch(express.json(),(req,res,next)=>{
+    const db = req.app.get('db');
+    const { title, url, description, rating } = req.body;
+    const updatedBookmark={ title, url, description, rating };
+    if(Object.values(updatedBookmark).filter(Boolean).length===0){
+      return res.status(400).json({
+        error: {
+          message: `Request body must contain either 'title', 'url', 'rating' or 'description'`
+        }
+      })
+    }
+    bookmarksService.updateById(db,req.params.id,updatedBookmark)
+      .then(numRowsAffected =>{
         res.status(204).end();
       })
       .catch(next);

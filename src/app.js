@@ -24,7 +24,7 @@ app.get('/', (req, res) => {
   res.send('Hello, boilerplate!');
 });
 
-app.use(bookmarkRouter);
+app.use('/api/bookmarks',bookmarkRouter);
 
 app.use(function errorHandler(error, req, res, next) {
   let response;
